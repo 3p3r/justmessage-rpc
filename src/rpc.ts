@@ -247,7 +247,7 @@ export class RPC extends EventEmitter {
 
   private post<T>(message: RPCMessage<T>) {
     (message as RPCMessageWithCounter<T>).counter = this.callCounter++;
-    this.options.target.postMessage(JSON.stringify(message), this.options.origin || '*');
+    this.options.target.postMessage(message, this.options.origin || '*');
   }
 
   private isReadySignal(packet: RPCMessageWithCounter<any>) {
@@ -271,7 +271,7 @@ export class RPC extends EventEmitter {
 
     let packet: RPCMessageWithCounter<any>;
     try {
-      packet = JSON.parse(ev.data);
+      packet = ev.data;
     } catch (e) {
       return;
     }

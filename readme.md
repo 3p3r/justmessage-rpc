@@ -1,4 +1,7 @@
-# @mixer/postmessage-rpc
+# justmessage-rpc
+
+> This fork removes `JSON.stringify/parse` from the core library.
+> Install with `npm install --legacy-peer-deps`
 
 This is a library for making RPC calls (asynchronous method calls) between browser windows or iframes. It builds upon the browser `postMessage` API, which lacks some features that complex applications may depend upon:
 

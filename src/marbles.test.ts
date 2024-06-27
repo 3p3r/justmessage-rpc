@@ -101,10 +101,10 @@ export async function testMarbles({
   let isReady = false;
 
   const rpc = new RPC({
-    target: { postMessage: (data: any) => messagesSentToRemote.push(JSON.parse(data)) },
+    target: { postMessage: (data: any) => messagesSentToRemote.push(data) },
     receiver: {
       readMessages: callback => {
-        sendMessage = event => callback({ data: JSON.stringify(event.data), origin: event.origin });
+        sendMessage = event => callback({ data: event.data, origin: event.origin });
         return () => (toreDown = true);
       },
     },
