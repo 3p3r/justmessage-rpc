@@ -3,8 +3,8 @@ import { EventEmitter } from 'eventemitter3';
 import { RPCError } from './error';
 import { Reorder } from './reorder';
 import {
-  defaultRecievable,
-  IMessageEvent,
+  defaultPostable,
+  defaultReceivable,
   IPostable,
   IReceivable,
   IRPCMethod,
@@ -25,7 +25,7 @@ export interface IRPCOptions {
   /**
    * Target window to send messages to, like an iframe.
    */
-  target: IPostable;
+  target?: IPostable;
 
   /**
    * Unique string that identifies this RPC service. This is used so that
@@ -33,12 +33,6 @@ export interface IRPCOptions {
    * This should be the same on both the sending and receiving end.
    */
   serviceId: string;
-
-  /**
-   * Remote origin that we'll communicate with. It may be set to and
-   * defaults to '*'.
-   */
-  origin?: string;
 
   /**
    * Protocol version that socket will advertise. Defaults to 1.0. You can
@@ -97,13 +91,13 @@ export class RPC extends EventEmitter {
    */
   constructor(private readonly options: IRPCOptions) {
     super();
-    this.unsubscribeCallback = (options.receiver || defaultRecievable).readMessages(this.listener);
+    this.unsubscribeCallback = (options.receiver || defaultReceivable).recvMessage(this.listener);
 
     // Both sides will fire "ready" when they're set up. When either we get
     // a ready or the other side successfully responds that they're ready,
     // resolve the "ready" promise.
     this.isReady = new Promise<void>(resolve => {
-      const response = { protocolVersion: options.protocolVersion || '1.0' };
+      const response = { protocolVersion: options.protocolVersion || '2.0' };
 
       this.expose('ready', () => {
         resolve();
@@ -247,7 +241,7 @@ export class RPC extends EventEmitter {
 
   private post<T>(message: RPCMessage<T>) {
     (message as RPCMessageWithCounter<T>).counter = this.callCounter++;
-    this.options.target.postMessage(message, this.options.origin || '*');
+    (this.options.target || defaultPostable).postMessage(message, '*');
   }
 
   private isReadySignal(packet: RPCMessageWithCounter<any>) {
@@ -262,20 +256,7 @@ export class RPC extends EventEmitter {
     return false;
   }
 
-  private listener = (ev: IMessageEvent) => {
-    // If we got data that wasn't a string or could not be parsed, or was
-    // from a different remote, it's not for us.
-    if (this.options.origin && this.options.origin !== '*' && ev.origin !== this.options.origin) {
-      return;
-    }
-
-    let packet: RPCMessageWithCounter<any>;
-    try {
-      packet = ev.data;
-    } catch (e) {
-      return;
-    }
-
+  private listener = (packet: any) => {
     if (!isRPCMessage(packet) || packet.serviceID !== this.options.serviceId) {
       return;
     }

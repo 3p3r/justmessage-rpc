@@ -1,5 +1,5 @@
 /**
- * Defines any message sentable over RPC.
+ * Defines any message sendable over RPC.
  */
 export type RPCMessage<T> = IRPCMethod<T> | IRPCReply<T>;
 
@@ -41,16 +41,11 @@ export interface IRPCReply<T> {
  * and postmessages from other sources.
  */
 export function isRPCMessage(data: any): data is RPCMessageWithCounter<any> {
-  return (data.type === 'method' || data.type === 'reply') && typeof data.counter === 'number';
-}
-
-/**
- * Describes a PostMessage event that the RPC will read. A subset of the
- * MessageEvent DOM type.
- */
-export interface IMessageEvent {
-  data: any;
-  origin: string;
+  return (
+    typeof data === 'object' &&
+    (data.type === 'method' || data.type === 'reply') &&
+    typeof data.counter === 'number'
+  );
 }
 
 /**
@@ -59,11 +54,11 @@ export interface IMessageEvent {
  * in tests.
  */
 export interface IPostable {
-  postMessage(data: any, targetOrigin: string): void;
+  postMessage(data: any, target?: string): void;
 }
 
 /**
- * IRecievable is an interface that describes something from wheich we can
+ * IReceivable is an interface that describes something from which we can
  * read a browser postMessage. It's implemented by the `window`, and is mocked
  * in tests.
  */
@@ -72,15 +67,25 @@ export interface IReceivable {
    * Takes a callback invoked to invoke whenever a message is received,
    * and returns a function the can be used to unsubscribe the callback.
    */
-  readMessages(callback: (ev: IMessageEvent) => void): () => void;
+  recvMessage(callback: (data: any) => void): () => void;
 }
 
 /**
- * Default `IRecievable` implementation that listens on the window.
+ * Default `IReceivable` implementation that listens on the window.
  */
-export const defaultRecievable: IReceivable = {
-  readMessages(callback) {
-    window.addEventListener('message', callback);
-    return () => window.removeEventListener('message', callback);
+export const defaultReceivable: IReceivable = {
+  recvMessage(callback) {
+    const _cb = ({ data }: MessageEvent) => callback(data);
+    window.addEventListener('message', _cb);
+    return () => window.removeEventListener('message', _cb);
+  },
+};
+
+/**
+ * Default `IPostable` implementation that sends messages to the parent window.
+ */
+export const defaultPostable: IPostable = {
+  postMessage(data) {
+    window.parent.postMessage(data, '*');
   },
 };

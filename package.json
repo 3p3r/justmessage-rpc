@@ -1,6 +1,6 @@
 {
   "name": "justmessage-rpc",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Remote procedure call layer between browser contexts and JS engines.",
   "main": "dist/rpc.js",
   "typings": "dist/rpc.d.ts",

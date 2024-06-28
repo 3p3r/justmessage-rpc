@@ -1,6 +1,13 @@
 # justmessage-rpc
 
-> This fork removes `JSON.stringify/parse` from the core library.
+> This fork:
+> 
+> - removes `JSON.stringify/parse` from the core library.
+> - removes `IMessageEvent` and all other DOM assumptions.
+> - renames `readMessages` to `recvMessage` for parity with `postMessage`.
+> - adds `defaultPostable` so that the library can be used as-is in iframes.
+> - removes `origin` from the core library due to the existence of `serviceId`s.
+> 
 > Install with `npm install --legacy-peer-deps`
 
 This is a library for making RPC calls (asynchronous method calls) between browser windows or iframes. It builds upon the browser `postMessage` API, which lacks some features that complex applications may depend upon:
@@ -18,7 +25,7 @@ The RPC class is symmetrical and should be created on both windows you want to t
 **parent.js**
 
 ```js
-import { RPC } from '@mixer/postmessage-rpc';
+import { RPC } from 'justmessage-rpc';
 
 const rpc = new RPC({
   // The window you want to talk to:
@@ -36,7 +43,7 @@ rpc.expose('add', (data) => data.a + data.b);
 **iframe.js**
 
 ```js
-import { RPC } from '@mixer/postmessage-rpc';
+import { RPC } from 'justmessage-rpc';
 
 const rpc = new RPC({
   target: window.parent,
